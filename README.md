@@ -1,4 +1,4 @@
-# Premium Telegram WebApp-Style Course Cabinet (Static MVP)
+# Premium Telegram WebApp-Style Course Cabinet (Static MVP) trigger pages build
 
 This is a **no-build static web app** (HTML/CSS/JS only) designed to look like a premium dark mobile app inside Telegram.
 
