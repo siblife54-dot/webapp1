@@ -1,10 +1,10 @@
-# Premium Telegram WebApp-Style Course Cabinet (Static MVP) trigger pages build
+# Premium Telegram WebApp-Style Course Cabinet (Static MVP)
 
 This is a **no-build static web app** (HTML/CSS/JS only) designed to look like a premium dark mobile app inside Telegram.
 
 ## Project files
 
-- `index.html` — dashboard (profile, progress, lessons row)
+- `index.html` — dashboard (profile, progress, vertical lessons feed)
 - `lesson.html` — lesson details page
 - `styles.css` — premium dark theme styles
 - `app.js` — main app logic (Telegram profile, progress, rendering)
@@ -121,13 +121,13 @@ When opened inside Telegram WebApp, the app reads:
 - Uses initials avatar placeholder
 - Shows “Connected to Telegram” badge
 
-Outside Telegram, it falls back to “Student” and “Web mode”.
+Outside Telegram, it falls back to “Студент” and “Режим веб”.
 
 ---
 
 ## MVP behavior summary
 
-- Dashboard shows a **single-row horizontal swipeable lesson list**
+- Dashboard shows a **single-column vertical lessons feed**
 - Lesson page supports title/content/video/attachments
 - “Mark as completed” uses `localStorage`
 - Progress bar and percentage are auto-calculated

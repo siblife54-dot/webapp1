@@ -14,7 +14,7 @@
     root.style.setProperty("--card", config.cardColor || "#0f1626");
 
     var brand = document.getElementById("brandName");
-    if (brand) brand.textContent = config.brandName || "Course Cabinet";
+    if (brand) brand.textContent = config.brandName || "Кабинет курса";
   }
 
   function getTelegramUser() {
@@ -24,13 +24,13 @@
   }
 
   function getUserName(user) {
-    if (!user) return "Student";
+    if (!user) return "Студент";
     var full = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
-    return full || user.username || "Student";
+    return full || user.username || "Студент";
   }
 
   function getInitials(name) {
-    var clean = (name || "Student").trim();
+    var clean = (name || "Студент").trim();
     var words = clean.split(/\s+/).filter(Boolean);
     if (!words.length) return "ST";
     if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
@@ -66,7 +66,7 @@
       course_id: raw.course_id,
       lesson_id: raw.lesson_id,
       day_number: Number(raw.day_number || 0),
-      title: raw.title || "Untitled",
+      title: raw.title || "Без названия",
       subtitle: raw.subtitle || "",
       preview_image_url: raw.preview_image_url || "",
       video_url: raw.video_url || "",
@@ -79,11 +79,11 @@
 
   async function fetchLessons(config) {
     var url = config.useSampleData ? (config.sampleCsvPath || "./sample-sheet.csv") : config.googleSheetCsvUrl;
-    if (!url) throw new Error("CSV URL is missing. Update config.js");
+    if (!url) throw new Error("Не указан CSV URL. Проверьте config.js");
 
     var response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
-      throw new Error("Could not load lessons. Check your CSV URL/public access.");
+      throw new Error("Ошибка загрузки данных. Проверьте CSV URL и публичный доступ.");
     }
 
     var text = await response.text();
@@ -111,19 +111,19 @@
 
     studentName.textContent = name;
     avatar.textContent = getInitials(name);
-    courseBadge.textContent = config.courseId || "Course";
+    courseBadge.textContent = config.courseId || "Курс";
 
     if (window.Telegram && window.Telegram.WebApp) {
-      telegramBadge.textContent = "Connected to Telegram";
+      telegramBadge.textContent = "Подключено к Telegram";
       telegramBadge.classList.add("connected");
     } else {
-      telegramBadge.textContent = "Web mode";
+      telegramBadge.textContent = "Режим веб";
     }
 
     if (!lessons.length) {
       list.innerHTML = "";
       stateBox.hidden = false;
-      stateBox.textContent = "No lessons found for this course_id. Check config.js or sheet rows.";
+      stateBox.textContent = "Нет доступных уроков для этого course_id. Проверьте config.js и строки таблицы.";
       renderProgress(lessons);
       return;
     }
@@ -134,13 +134,13 @@
     list.innerHTML = lessons.map(function (lesson) {
       var done = completed.includes(lesson.lesson_id);
       var statusClass = done ? "done" : (lesson.is_locked ? "locked" : "open");
-      var statusText = done ? "Completed ✓" : (lesson.is_locked ? "Locked" : "Open");
+      var statusText = done ? "Пройдено ✓" : (lesson.is_locked ? "Закрыт" : "Открыт");
 
       return [
         '<a class="lesson-card" href="./lesson.html?id=' + encodeURIComponent(lesson.lesson_id) + '">',
-        '<div class="lesson-meta"><span>Day ' + (lesson.day_number || "-") + '</span><span class="status ' + statusClass + '">' + statusText + '</span></div>',
+        '<div class="lesson-meta"><span>День ' + (lesson.day_number || "-") + '</span><span class="status ' + statusClass + '">' + statusText + '</span></div>',
         '<h3>' + escapeHtml(lesson.title) + '</h3>',
-        '<p>' + escapeHtml(lesson.subtitle || "No description") + '</p>',
+        '<p>' + escapeHtml(lesson.subtitle || "Описание отсутствует") + '</p>',
         '</a>'
       ].join("");
     }).join("");
@@ -157,7 +157,7 @@
 
     var pct = total ? Math.round((completedCount / total) * 100) : 0;
 
-    document.getElementById("progressText").textContent = completedCount + "/" + total + " lessons completed";
+    document.getElementById("progressText").textContent = completedCount + "/" + total + " уроков пройдено";
     document.getElementById("progressPct").textContent = pct + "%";
     document.getElementById("progressFill").style.width = pct + "%";
   }
@@ -184,7 +184,7 @@
 
     if (!id) {
       stateBox.classList.remove("skeleton");
-      stateBox.textContent = "Lesson ID not found. Open from the dashboard cards.";
+      stateBox.textContent = "ID урока не найден. Откройте урок из списка в кабинете.";
       return;
     }
 
@@ -194,14 +194,14 @@
 
     if (!lesson) {
       stateBox.classList.remove("skeleton");
-      stateBox.textContent = "Lesson not found for this course.";
+      stateBox.textContent = "Урок не найден для выбранного курса.";
       return;
     }
 
     stateBox.hidden = true;
     main.hidden = false;
 
-    document.getElementById("lessonDay").textContent = "Day " + (lesson.day_number || "-");
+    document.getElementById("lessonDay").textContent = "День " + (lesson.day_number || "-");
     document.getElementById("lessonTitle").textContent = lesson.title;
     document.getElementById("lessonSubtitle").textContent = lesson.subtitle || "";
 
@@ -209,7 +209,7 @@
     if (lesson.content_html) {
       content.innerHTML = lesson.content_html;
     } else {
-      content.textContent = lesson.content_text || "Lesson content is empty.";
+      content.textContent = lesson.content_text || "Содержимое урока пока пустое.";
     }
 
     var safeVideo = getSafeVideoEmbed(lesson.video_url);
@@ -231,19 +231,19 @@
       attachmentsWrap.hidden = false;
       attachmentsList.innerHTML = attachments.map(function (url, i) {
         var safe = /^https?:\/\//i.test(url) ? url : "#";
-        return '<li><a href="' + safe + '" target="_blank" rel="noopener noreferrer">Attachment ' + (i + 1) + '</a></li>';
+        return '<li><a href="' + safe + '" target="_blank" rel="noopener noreferrer">Материал ' + (i + 1) + '</a></li>';
       }).join("");
     }
 
     var completeBtn = document.getElementById("completeBtn");
     if (loadCompleted().includes(lesson.lesson_id)) {
-      completeBtn.textContent = "Completed ✓";
+      completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
     }
 
     completeBtn.addEventListener("click", function () {
       markCompleted(lesson.lesson_id);
-      completeBtn.textContent = "Completed ✓";
+      completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
     });
   }
@@ -259,6 +259,9 @@
 
   function showDashboardLoading() {
     var list = document.getElementById("lessonsContainer");
+    var box = document.getElementById("stateBox");
+    box.hidden = false;
+    box.textContent = "Загрузка уроков...";
     list.innerHTML = [
       '<div class="lesson-card skeleton" aria-hidden="true" style="height:130px"></div>',
       '<div class="lesson-card skeleton" aria-hidden="true" style="height:130px"></div>',
@@ -292,11 +295,11 @@
       if (page === "lesson") renderLesson(lessons);
     } catch (error) {
       if (page === "dashboard") {
-        showDashboardError(error.message || "Something went wrong while loading lessons.");
+        showDashboardError(error.message || "Ошибка загрузки данных.");
       } else {
         var stateBox = document.getElementById("lessonState");
         stateBox.classList.remove("skeleton");
-        stateBox.textContent = error.message || "Could not load lesson.";
+        stateBox.textContent = error.message || "Не удалось загрузить урок.";
       }
     }
   }
