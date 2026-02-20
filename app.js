@@ -9,9 +9,9 @@
 
   function applyTheme(config) {
     var root = document.documentElement;
-    root.style.setProperty("--accent", config.accentColor || "#5f8bff");
-    root.style.setProperty("--bg", config.backgroundColor || "#070b14");
-    root.style.setProperty("--card", config.cardColor || "#0f1626");
+    root.style.setProperty("--accent", config.accentColor || "#8B5CF6");
+    root.style.setProperty("--bg", config.backgroundColor || "#0E1B2B");
+    root.style.setProperty("--card", config.cardColor || "#12243a");
 
     var brand = document.getElementById("brandName");
     if (brand) brand.textContent = config.brandName || "Кабинет курса";
@@ -32,7 +32,7 @@
   function getInitials(name) {
     var clean = (name || "Студент").trim();
     var words = clean.split(/\s+/).filter(Boolean);
-    if (!words.length) return "ST";
+    if (!words.length) return "СТ";
     if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
     return (words[0][0] + words[1][0]).toUpperCase();
   }
@@ -55,10 +55,6 @@
       completed.push(id);
       saveCompleted(completed);
     }
-  }
-
-  function resetCompleted() {
-    localStorage.removeItem(STORAGE_KEY);
   }
 
   function normalizeLesson(raw) {
@@ -117,13 +113,13 @@
       telegramBadge.textContent = "Подключено к Telegram";
       telegramBadge.classList.add("connected");
     } else {
-      telegramBadge.textContent = "Режим веб";
+      telegramBadge.textContent = "Веб-режим";
     }
 
     if (!lessons.length) {
       list.innerHTML = "";
       stateBox.hidden = false;
-      stateBox.textContent = "Нет доступных уроков для этого course_id. Проверьте config.js и строки таблицы.";
+      stateBox.textContent = "Нет доступных уроков";
       renderProgress(lessons);
       return;
     }
@@ -133,15 +129,30 @@
     var completed = loadCompleted();
     list.innerHTML = lessons.map(function (lesson) {
       var done = completed.includes(lesson.lesson_id);
-      var statusClass = done ? "done" : (lesson.is_locked ? "locked" : "open");
-      var statusText = done ? "Пройдено ✓" : (lesson.is_locked ? "Закрыт" : "Открыт");
+      var locked = lesson.is_locked;
 
       return [
-        '<a class="lesson-card" href="./lesson.html?id=' + encodeURIComponent(lesson.lesson_id) + '">',
-        '<div class="lesson-meta"><span>День ' + (lesson.day_number || "-") + '</span><span class="status ' + statusClass + '">' + statusText + '</span></div>',
+        '<article class="lesson-card' + (locked ? ' locked' : '') + '">',
+        '<div class="lesson-preview">',
+        (lesson.preview_image_url ? '<img src="' + escapeAttr(lesson.preview_image_url) + '" alt="Превью урока" loading="lazy" onerror="this.style.display=\'none\'">' : ''),
+        '</div>',
+        '<div class="lesson-card-body">',
+        '<div class="lesson-meta">',
+        '<span class="lesson-day">День ' + (lesson.day_number || "-") + '</span>',
+        '<div class="lesson-indicators">',
+        (done ? '<span class="status done">Пройдено</span>' : ''),
+        (locked ? '<span class="status locked">Недоступно</span>' : ''),
+        '</div>',
+        '</div>',
         '<h3>' + escapeHtml(lesson.title) + '</h3>',
         '<p>' + escapeHtml(lesson.subtitle || "Описание отсутствует") + '</p>',
-        '</a>'
+        '<div class="lesson-actions">',
+        (locked
+          ? '<button class="btn btn-open" type="button" disabled>Открыть</button>'
+          : '<a class="btn btn-open" href="./lesson.html?id=' + encodeURIComponent(lesson.lesson_id) + '">Открыть</a>'),
+        '</div>',
+        '</div>',
+        '</article>'
       ].join("");
     }).join("");
 
@@ -157,7 +168,7 @@
 
     var pct = total ? Math.round((completedCount / total) * 100) : 0;
 
-    document.getElementById("progressText").textContent = completedCount + "/" + total + " уроков пройдено";
+    document.getElementById("progressText").textContent = "Пройдено: " + completedCount + " из " + total;
     document.getElementById("progressPct").textContent = pct + "%";
     document.getElementById("progressFill").style.width = pct + "%";
   }
@@ -184,7 +195,7 @@
 
     if (!id) {
       stateBox.classList.remove("skeleton");
-      stateBox.textContent = "ID урока не найден. Откройте урок из списка в кабинете.";
+      stateBox.textContent = "ID урока не найден. Откройте урок из списка.";
       return;
     }
 
@@ -195,6 +206,12 @@
     if (!lesson) {
       stateBox.classList.remove("skeleton");
       stateBox.textContent = "Урок не найден для выбранного курса.";
+      return;
+    }
+
+    if (lesson.is_locked) {
+      stateBox.classList.remove("skeleton");
+      stateBox.textContent = "Этот урок пока недоступен.";
       return;
     }
 
@@ -257,15 +274,18 @@
       .replace(/'/g, "&#039;");
   }
 
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(/`/g, "");
+  }
+
   function showDashboardLoading() {
     var list = document.getElementById("lessonsContainer");
     var box = document.getElementById("stateBox");
     box.hidden = false;
     box.textContent = "Загрузка уроков...";
     list.innerHTML = [
-      '<div class="lesson-card skeleton" aria-hidden="true" style="height:130px"></div>',
-      '<div class="lesson-card skeleton" aria-hidden="true" style="height:130px"></div>',
-      '<div class="lesson-card skeleton" aria-hidden="true" style="height:130px"></div>'
+      '<div class="lesson-card skeleton" aria-hidden="true" style="height:220px"></div>',
+      '<div class="lesson-card skeleton" aria-hidden="true" style="height:220px"></div>'
     ].join("");
   }
 
@@ -273,7 +293,7 @@
     document.getElementById("lessonsContainer").innerHTML = "";
     var box = document.getElementById("stateBox");
     box.hidden = false;
-    box.textContent = message;
+    box.textContent = message || "Ошибка загрузки данных";
   }
 
   async function init() {
@@ -283,10 +303,6 @@
     var page = document.body.getAttribute("data-page");
     if (page === "dashboard") {
       showDashboardLoading();
-      document.getElementById("resetProgressBtn").addEventListener("click", function () {
-        resetCompleted();
-        window.location.reload();
-      });
     }
 
     try {
@@ -295,7 +311,7 @@
       if (page === "lesson") renderLesson(lessons);
     } catch (error) {
       if (page === "dashboard") {
-        showDashboardError(error.message || "Ошибка загрузки данных.");
+        showDashboardError(error.message || "Ошибка загрузки данных");
       } else {
         var stateBox = document.getElementById("lessonState");
         stateBox.classList.remove("skeleton");
