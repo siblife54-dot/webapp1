@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Course Dashboard</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="dashboard">
+  <div class="header-brand" id="brandName">Brand</div>
+
+  <section class="card profile-card">
+    <div class="avatar" id="avatar">ST</div>
+    <div class="profile-meta">
+      <h1 id="studentName">Student</h1>
+      <p>Premium course access</p>
+      <div class="badges">
+        <span class="badge" id="courseBadge">Course</span>
+        <span class="badge" id="telegramBadge">Web</span>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="section-title">Progress</h2>
+  <section class="card progress-wrap">
+    <div class="progress-top">
+      <span id="progressText">0/0 lessons completed</span>
+      <strong id="progressPct">0%</strong>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-danger" id="resetProgressBtn" type="button">Reset progress</button>
+    </div>
+  </section>
+
+  <h2 class="section-title">Lessons</h2>
+  <section id="lessonsContainer" class="lessons-row" aria-live="polite"></section>
+  <div id="stateBox" class="state" hidden></div>
+
+  <script src="./config.js"></script>
+  <script src="./csv.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

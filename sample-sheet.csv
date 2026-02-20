@@ -1,0 +1,5 @@
+course_id,lesson_id,day_number,title,subtitle,preview_image_url,video_url,content_html,content_text,attachments,is_locked
+course_alpha,day1,1,Welcome & Positioning,Build your expert positioning in one clear statement,,https://www.youtube.com/watch?v=dQw4w9WgXcQ,,"Start with your premium offer: define audience, promise, and expected transformation.",https://example.com/checklist.pdf|https://example.com/script.docx,0
+course_alpha,day2,2,Audience Research,Find high-value client pain points with simple prompts,,,"<p><strong>Task:</strong> Interview 3 target clients this week.</p><p>Capture exact wording they use for pain points.</p>",,https://example.com/interview-template.pdf,0
+course_alpha,day3,3,Offer Packaging,Design your core package and pricing logic,,,"Write your offer stack and name each component.",,,1
+course_beta,day1,1,Another Course Intro,This row belongs to another course and should be filtered out,,,,,,0
