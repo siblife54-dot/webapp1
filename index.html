@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Кабинет курса</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="dashboard">
+  <div class="header-brand" id="brandName">Бренд</div>
+
+  <section class="card profile-card">
+    <div class="avatar" id="avatar">СТ</div>
+    <div class="profile-meta">
+      <h1 id="studentName">Студент</h1>
+      <p>Премиум-доступ к курсу</p>
+    </div>
+  </section>
+
+  <h2 class="section-title">Прогресс курса</h2>
+  <section class="card progress-wrap">
+    <div class="progress-top">
+      <span id="progressText">Пройдено: 0 из 0</span>
+      <strong id="progressPct">0%</strong>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </section>
+
+  <h2 class="section-title">Уроки</h2>
+  <section id="lessonsContainer" class="lessons-list" aria-live="polite"></section>
+  <div id="stateBox" class="state" hidden></div>
+
+  <script src="./config.js"></script>
+  <script src="./csv.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+:root {
+  --bg: #0E1B2B;
+  --card: #12243a;
+  --card-2: #172d47;
+  --text: #eef3ff;
+  --muted: #9facc4;
+  --accent: #8B5CF6;
+  --border: rgba(255, 255, 255, 0.09);
+  --radius-lg: 20px;
+  --radius-md: 18px;
+  --shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(900px 500px at 20% -15%, rgba(139, 92, 246, 0.16), transparent 55%), var(--bg);
+  color: var(--text);
+}
+
+body {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 18px 14px 30px;
+}
+
+a { color: inherit; }
+
+.header-brand {
+  margin: 6px 2px 14px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card {
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.profile-card {
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 18px;
+  border: 1px solid var(--border);
+}
+
+.profile-meta h1 { margin: 0; font-size: 18px; }
+.profile-meta p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+.badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.section-title {
+  margin: 22px 4px 10px;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+}
+
+.progress-wrap { padding: 14px; }
+
+.progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: width .35s ease;
+}
+
+.lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.lesson-card {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(139, 92, 246, 0.08) inset;
+  overflow: hidden;
+}
+
+.lesson-card.locked {
+  opacity: 0.72;
+}
+
+.lesson-preview {
+  height: 128px;
+  background:
+    radial-gradient(120% 110% at 0% 0%, rgba(139, 92, 246, 0.28), transparent 58%),
+    linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+  position: relative;
+}
+
+.lesson-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.05) 50%, transparent 65%);
+}
+
+.lesson-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lesson-card-body {
+  padding: 12px 14px 14px;
+}
+
+.lesson-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.lesson-day {
+  color: #d8def0;
+}
+
+.lesson-indicators {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.status {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.status.done {
+  color: #f2eaff;
+  background: rgba(139, 92, 246, 0.2);
+}
+
+.status.locked {
+  color: #ffe2e5;
+  background: rgba(255, 111, 125, 0.16);
+}
+
+.lesson-card h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.lesson-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.lesson-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.btn {
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.28), rgba(139, 92, 246, 0.18));
+  color: #f7f3ff;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+.btn[disabled] {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 82%, black));
+  border-color: transparent;
+}
+
+
+.row-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.state {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  width: 120px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer { to { transform: translateX(420px); } }
+
+.lesson-page h1 {
+  margin: 14px 0 8px;
+  font-size: 24px;
+}
+
+.lesson-subtitle {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
+.video-wrap {
+  margin: 14px 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.video-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.content-card,
+.attachments {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+
+.content-card { line-height: 1.6; }
+
+.attachments ul { margin: 10px 0 0; padding-left: 16px; }
+.attachments li { margin-bottom: 8px; }
+
+.top-back {
+  margin-bottom: 8px;
+  display: inline-block;
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.debug-panel {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  max-height: 34vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(6, 12, 24, 0.88);
+  color: #dbe7ff;
+  font-size: 11px;
+  line-height: 1.35;
+  z-index: 9999;
+  backdrop-filter: blur(6px);
+}
