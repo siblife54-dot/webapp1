@@ -266,12 +266,74 @@
     return match ? match[1] : null;
   }
 
-  function getSafeVideoEmbed(url) {
-    var youtubeId = extractYouTubeId(url);
-    if (youtubeId) return "https://www.youtube.com/embed/" + youtubeId;
+  function isYandexUrl(url) {
+    return /(?:disk\.yandex\.ru|yadi\.sk)/i.test(url || "");
+  }
 
-    if (/^https:\/\//i.test(url)) return url;
+  function isYandexEmbedUrl(url) {
+    return /(?:embed|iframe|video-player|\/i\/)/i.test(url || "");
+  }
+
+  function extractDriveFileId(url) {
+    if (!url) return null;
+
+    var byPath = url.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+    if (byPath && byPath[1]) return byPath[1];
+
+    try {
+      var parsed = new URL(url);
+      var fromId = parsed.searchParams.get("id");
+      if (fromId) return fromId;
+    } catch (e) {
+      return null;
+    }
+
     return null;
+  }
+
+  function normalizeMediaUrl(url, type) {
+    var value = String(url || "").trim();
+    if (!value) return "";
+
+    var driveFileId = extractDriveFileId(value);
+    if (driveFileId) {
+      if (type === "video") {
+        return "https://drive.google.com/file/d/" + driveFileId + "/preview";
+      }
+      return value;
+    }
+
+    if (/drive\.google\.com\/drive\/folders\//i.test(value)) {
+      return value;
+    }
+
+    if (isYandexUrl(value)) {
+      return value;
+    }
+
+    if (type === "video") {
+      var youtubeId = extractYouTubeId(value);
+      if (youtubeId) return "https://www.youtube.com/embed/" + youtubeId;
+    }
+
+    return value;
+  }
+
+  function getVideoRenderModel(url) {
+    var normalized = normalizeMediaUrl(url, "video");
+    if (!normalized) {
+      return { mode: "none", url: "" };
+    }
+
+    if (isYandexUrl(normalized) && !isYandexEmbedUrl(normalized)) {
+      return { mode: "link", url: normalized };
+    }
+
+    if (/^https:\/\//i.test(normalized)) {
+      return { mode: "embed", url: normalized };
+    }
+
+    return { mode: "none", url: "" };
   }
 
   function renderLesson(lessons) {
@@ -317,12 +379,18 @@
       content.textContent = lesson.content_text || "Содержимое урока пока пустое.";
     }
 
-    var safeVideo = getSafeVideoEmbed(lesson.video_url);
-    if (safeVideo) {
-      var videoWrap = document.getElementById("videoWrap");
-      var frame = document.getElementById("videoFrame");
-      frame.src = safeVideo;
+    var videoModel = getVideoRenderModel(lesson.video_url);
+    var videoWrap = document.getElementById("videoWrap");
+    var frame = document.getElementById("videoFrame");
+    var videoLinkCard = document.getElementById("videoLinkCard");
+    var videoLinkButton = document.getElementById("videoLinkButton");
+
+    if (videoModel.mode === "embed") {
+      frame.src = videoModel.url;
       videoWrap.hidden = false;
+    } else if (videoModel.mode === "link") {
+      videoLinkButton.href = videoModel.url;
+      videoLinkCard.hidden = false;
     }
 
     var attachmentsWrap = document.getElementById("attachmentsWrap");
@@ -335,7 +403,8 @@
     if (attachments.length) {
       attachmentsWrap.hidden = false;
       attachmentsList.innerHTML = attachments.map(function (url, i) {
-        var safe = /^https?:\/\//i.test(url) ? url : "#";
+        var normalizedFile = normalizeMediaUrl(url, "file");
+        var safe = /^https?:\/\//i.test(normalizedFile) ? normalizedFile : "#";
         return '<li><a href="' + safe + '" target="_blank" rel="noopener noreferrer">Материал ' + (i + 1) + '</a></li>';
       }).join("");
     }

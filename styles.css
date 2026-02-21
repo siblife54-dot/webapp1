@@ -291,6 +291,21 @@ a { color: inherit; }
   border: none;
 }
 
+
+.video-link-card {
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+}
+
+.video-link-card p {
+  margin: 8px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .content-card,
 .attachments {
   padding: 14px;
