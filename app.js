@@ -2,6 +2,7 @@
   "use strict";
 
   var STORAGE_KEY = "course_completed_lessons_v1";
+  var LEGACY_STORAGE_KEY = "completedLessons";
 
   function getConfig() {
     return window.APP_CONFIG || {};
@@ -44,16 +45,29 @@
     return (words[0][0] + words[1][0]).toUpperCase();
   }
 
-  function loadCompleted() {
+  function parseCompletedRaw(raw) {
+    if (!raw) return [];
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       return [];
     }
   }
 
+  function loadCompleted() {
+    var rawPrimary = localStorage.getItem(STORAGE_KEY);
+    var primary = parseCompletedRaw(rawPrimary);
+    if (primary.length) return primary;
+
+    var rawLegacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    return parseCompletedRaw(rawLegacy);
+  }
+
   function saveCompleted(ids) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    var clean = Array.from(new Set(ids));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+    localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(clean));
   }
 
   function markCompleted(id) {
@@ -102,12 +116,19 @@
       });
   }
 
-  function getAccessibleLessonIds(lessons, completed) {
-    var completedCount = lessons.filter(function (lesson) {
-      return completed.includes(lesson.lesson_id);
-    }).length;
+  function getMaxCompletedDayNumber(lessons, completed) {
+    var maxDay = 0;
+    lessons.forEach(function (lesson) {
+      if (completed.includes(lesson.lesson_id) && lesson.day_number > maxDay) {
+        maxDay = lesson.day_number;
+      }
+    });
+    return maxDay;
+  }
 
-    var threshold = completedCount + 1;
+  function getAccessibilityModel(lessons, completed) {
+    var maxCompletedDayNumber = getMaxCompletedDayNumber(lessons, completed);
+    var threshold = maxCompletedDayNumber + 1;
     var map = {};
 
     lessons.forEach(function (lesson) {
@@ -116,10 +137,59 @@
       map[lesson.lesson_id] = !isAdminLocked && isSequentiallyOpen;
     });
 
-    return map;
+    return {
+      maxCompletedDayNumber: maxCompletedDayNumber,
+      threshold: threshold,
+      map: map
+    };
   }
 
-  function renderDashboard(lessons) {
+  function isDebugMode() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get("debug") === "1";
+  }
+
+  function renderDebugPanel(config, lessons, completed, model) {
+    if (!isDebugMode()) return;
+
+    var existing = document.getElementById("debugPanel");
+    if (existing) existing.remove();
+
+    var panel = document.createElement("aside");
+    panel.id = "debugPanel";
+    panel.className = "debug-panel";
+
+    var rawStorage = localStorage.getItem(STORAGE_KEY);
+    var rawLegacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+
+    var lines = [
+      "DEBUG MODE",
+      "courseId: " + (config.courseId || "(пусто)"),
+      "total lessons loaded: " + lessons.length,
+      "localStorage." + STORAGE_KEY + ": " + String(rawStorage),
+      "localStorage.completedLessons raw value: " + String(rawLegacy),
+      "parsed completedLessons array: " + JSON.stringify(completed),
+      "maxCompletedDayNumber: " + model.maxCompletedDayNumber,
+      "unlock threshold (max + 1): " + model.threshold,
+      ""
+    ];
+
+    lessons.forEach(function (lesson) {
+      lines.push(
+        [
+          "lesson_id=" + lesson.lesson_id,
+          "day_number=" + lesson.day_number,
+          "is_locked=" + lesson.is_locked,
+          "accessible=" + Boolean(model.map[lesson.lesson_id])
+        ].join(" | ")
+      );
+    });
+
+    panel.textContent = lines.join("\n");
+    document.body.appendChild(panel);
+  }
+
+  function renderDashboard(lessons, config) {
     var user = getTelegramUser();
     var name = getUserName(user);
     var avatar = document.getElementById("avatar");
@@ -129,6 +199,11 @@
 
     studentName.textContent = name;
     avatar.textContent = getInitials(name);
+
+    var completed = loadCompleted();
+    var accessModel = getAccessibilityModel(lessons, completed);
+
+    renderDebugPanel(config, lessons, completed, accessModel);
 
     if (!lessons.length) {
       list.innerHTML = "";
@@ -140,12 +215,9 @@
 
     stateBox.hidden = true;
 
-    var completed = loadCompleted();
-    var accessibleMap = getAccessibleLessonIds(lessons, completed);
-
     list.innerHTML = lessons.map(function (lesson) {
       var done = completed.includes(lesson.lesson_id);
-      var accessible = Boolean(accessibleMap[lesson.lesson_id]);
+      var accessible = Boolean(accessModel.map[lesson.lesson_id]);
       var locked = !accessible;
 
       return [
@@ -227,8 +299,8 @@
     }
 
     var completed = loadCompleted();
-    var accessibleMap = getAccessibleLessonIds(lessons, completed);
-    if (!accessibleMap[lesson.lesson_id]) {
+    var accessModel = getAccessibilityModel(lessons, completed);
+    if (!accessModel.map[lesson.lesson_id]) {
       stateBox.classList.remove("skeleton");
       stateBox.textContent = "Этот урок пока недоступен.";
       return;
@@ -327,7 +399,7 @@
 
     try {
       var lessons = await fetchLessons(config);
-      if (page === "dashboard") renderDashboard(lessons);
+      if (page === "dashboard") renderDashboard(lessons, config);
       if (page === "lesson") renderLesson(lessons);
     } catch (error) {
       if (page === "dashboard") {
