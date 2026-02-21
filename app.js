@@ -18,9 +18,16 @@
   }
 
   function getTelegramUser() {
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) return null;
-    return tg.initDataUnsafe.user;
+    var user = globalThis.Telegram?.WebApp?.initDataUnsafe?.user;
+    return user || null;
+  }
+
+  function initTelegramViewport() {
+    var tg = globalThis.Telegram && globalThis.Telegram.WebApp;
+    if (!tg) return;
+
+    if (typeof tg.ready === "function") tg.ready();
+    if (typeof tg.expand === "function") tg.expand();
   }
 
   function getUserName(user) {
@@ -95,26 +102,33 @@
       });
   }
 
-  function renderDashboard(lessons, config) {
+  function getAccessibleLessonIds(lessons, completed) {
+    var completedCount = lessons.filter(function (lesson) {
+      return completed.includes(lesson.lesson_id);
+    }).length;
+
+    var threshold = completedCount + 1;
+    var map = {};
+
+    lessons.forEach(function (lesson) {
+      var isAdminLocked = lesson.is_locked;
+      var isSequentiallyOpen = lesson.day_number <= threshold;
+      map[lesson.lesson_id] = !isAdminLocked && isSequentiallyOpen;
+    });
+
+    return map;
+  }
+
+  function renderDashboard(lessons) {
     var user = getTelegramUser();
     var name = getUserName(user);
     var avatar = document.getElementById("avatar");
     var studentName = document.getElementById("studentName");
-    var courseBadge = document.getElementById("courseBadge");
-    var telegramBadge = document.getElementById("telegramBadge");
     var list = document.getElementById("lessonsContainer");
     var stateBox = document.getElementById("stateBox");
 
     studentName.textContent = name;
     avatar.textContent = getInitials(name);
-    courseBadge.textContent = config.courseId || "Курс";
-
-    if (window.Telegram && window.Telegram.WebApp) {
-      telegramBadge.textContent = "Подключено к Telegram";
-      telegramBadge.classList.add("connected");
-    } else {
-      telegramBadge.textContent = "Веб-режим";
-    }
 
     if (!lessons.length) {
       list.innerHTML = "";
@@ -127,9 +141,12 @@
     stateBox.hidden = true;
 
     var completed = loadCompleted();
+    var accessibleMap = getAccessibleLessonIds(lessons, completed);
+
     list.innerHTML = lessons.map(function (lesson) {
       var done = completed.includes(lesson.lesson_id);
-      var locked = lesson.is_locked;
+      var accessible = Boolean(accessibleMap[lesson.lesson_id]);
+      var locked = !accessible;
 
       return [
         '<article class="lesson-card' + (locked ? ' locked' : '') + '">',
@@ -209,7 +226,9 @@
       return;
     }
 
-    if (lesson.is_locked) {
+    var completed = loadCompleted();
+    var accessibleMap = getAccessibleLessonIds(lessons, completed);
+    if (!accessibleMap[lesson.lesson_id]) {
       stateBox.classList.remove("skeleton");
       stateBox.textContent = "Этот урок пока недоступен.";
       return;
@@ -253,7 +272,7 @@
     }
 
     var completeBtn = document.getElementById("completeBtn");
-    if (loadCompleted().includes(lesson.lesson_id)) {
+    if (completed.includes(lesson.lesson_id)) {
       completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
     }
@@ -299,6 +318,7 @@
   async function init() {
     var config = getConfig();
     applyTheme(config);
+    initTelegramViewport();
 
     var page = document.body.getAttribute("data-page");
     if (page === "dashboard") {
@@ -307,7 +327,7 @@
 
     try {
       var lessons = await fetchLessons(config);
-      if (page === "dashboard") renderDashboard(lessons, config);
+      if (page === "dashboard") renderDashboard(lessons);
       if (page === "lesson") renderLesson(lessons);
     } catch (error) {
       if (page === "dashboard") {

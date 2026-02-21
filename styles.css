@@ -68,20 +68,12 @@ a { color: inherit; }
 .profile-meta h1 { margin: 0; font-size: 18px; }
 .profile-meta p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
 
-.badges { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
-
 .badge {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--border);
   color: var(--muted);
-}
-
-.badge.connected {
-  color: #e8e1ff;
-  background: rgba(139, 92, 246, 0.18);
-  border-color: rgba(139, 92, 246, 0.45);
 }
 
 .section-title {
