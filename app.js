@@ -89,8 +89,7 @@
       video_url: raw.video_url || "",
       content_html: raw.content_html || "",
       content_text: raw.content_text || "",
-      attachments: raw.attachments || "",
-      is_locked: String(raw.is_locked || "0") === "1"
+      attachments: raw.attachments || ""
     };
   }
 
@@ -132,9 +131,8 @@
     var map = {};
 
     lessons.forEach(function (lesson) {
-      var isAdminLocked = lesson.is_locked;
       var isSequentiallyOpen = lesson.day_number <= threshold;
-      map[lesson.lesson_id] = !isAdminLocked && isSequentiallyOpen;
+      map[lesson.lesson_id] = isSequentiallyOpen;
     });
 
     return {
@@ -170,7 +168,7 @@
       "localStorage.completedLessons raw value: " + String(rawLegacy),
       "parsed completedLessons array: " + JSON.stringify(completed),
       "maxCompletedDayNumber: " + model.maxCompletedDayNumber,
-      "unlock threshold (max + 1): " + model.threshold,
+      "unlockThreshold: " + model.threshold,
       ""
     ];
 
@@ -179,7 +177,6 @@
         [
           "lesson_id=" + lesson.lesson_id,
           "day_number=" + lesson.day_number,
-          "is_locked=" + lesson.is_locked,
           "accessible=" + Boolean(model.map[lesson.lesson_id])
         ].join(" | ")
       );
@@ -230,7 +227,7 @@
         '<span class="lesson-day">День ' + (lesson.day_number || "-") + '</span>',
         '<div class="lesson-indicators">',
         (done ? '<span class="status done">Пройдено</span>' : ''),
-        (locked ? '<span class="status locked">Недоступно</span>' : ''),
+        (locked ? '<span class="status locked">Закрыто</span>' : ''),
         '</div>',
         '</div>',
         '<h3>' + escapeHtml(lesson.title) + '</h3>',
@@ -353,6 +350,9 @@
       markCompleted(lesson.lesson_id);
       completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
+      setTimeout(function () {
+        window.location.href = "./index.html";
+      }, 250);
     });
   }
 
