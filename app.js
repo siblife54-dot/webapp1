@@ -151,10 +151,43 @@
   }
 
 
+  function extractGoogleDriveFileId(url) {
+    var value = String(url || "").trim();
+    if (!value) return null;
+
+    var byFilePath = value.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+    if (byFilePath && byFilePath[1]) return byFilePath[1];
+
+    var byGoogleusercontent = value.match(/googleusercontent\.com\/.*?\/d\/([^/]+)/i);
+    if (byGoogleusercontent && byGoogleusercontent[1]) return byGoogleusercontent[1];
+
+    try {
+      var parsed = new URL(value);
+      var idFromParam = parsed.searchParams.get("id");
+      if (idFromParam) return idFromParam;
+    } catch (e) {
+      return null;
+    }
+
+    return null;
+  }
+
+  function normalizePreviewImageUrl(url) {
+    var value = String(url || "").trim();
+    if (!value) return "";
+
+    var driveId = extractGoogleDriveFileId(value);
+    if (driveId) {
+      return "https://drive.google.com/thumbnail?id=" + driveId + "&sz=w1200";
+    }
+
+    return value;
+  }
+
   function getPreviewSrc(lesson) {
     var raw = String(lesson.preview_image_url || lesson.preview_image_ || "").trim();
     if (!raw) return "";
-    return normalizeMediaUrl(raw, "file");
+    return normalizePreviewImageUrl(raw);
   }
 
   function renderDebugPanel(config, lessons, completed, model) {
