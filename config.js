@@ -1,6 +1,6 @@
 window.APP_CONFIG = {
   // Включите true для локального демо с файлом ./sample-sheet.csv
-  useSampleData: false,
+  useSampleData: true,
 
   // Брендинг
   brandName: "Expert Cabinet",
@@ -11,8 +11,8 @@ window.APP_CONFIG = {
   // Курс
   courseId: "course_alpha",
 
-  // Публичный CSV URL из Google Sheets (Published to the web -> CSV)
-  googleSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_2QwAjsWDNtuguAtXNIYaBv89b2SWhdz2hj9QnMGzEUTSXehviVcPPrZ07FVcIixK2DXoShTwp-Xy/pub?output=csv",
+  // Публичный CSV URL из Google Sheets
+  googleSheetCsvUrl: "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=csv",
 
   // Локальный демо-файл
   sampleCsvPath: "./sample-sheet.csv"

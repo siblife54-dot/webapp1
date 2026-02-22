@@ -3,6 +3,8 @@
 
   var STORAGE_KEY = "course_completed_lessons_v1";
   var LEGACY_STORAGE_KEY = "completedLessons";
+  var DEBUG_IMG_STATUS = {};
+  var DEBUG_LAST_CONTEXT = null;
 
   function getConfig() {
     return window.APP_CONFIG || {};
@@ -86,6 +88,7 @@
       title: raw.title || "Без названия",
       subtitle: raw.subtitle || "",
       preview_image_url: raw.preview_image_url || "",
+      preview_image_: raw.preview_image_ || "",
       video_url: raw.video_url || "",
       content_html: raw.content_html || "",
       content_text: raw.content_text || "",
@@ -147,8 +150,22 @@
     return params.get("debug") === "1";
   }
 
+
+  function getPreviewSrc(lesson) {
+    var raw = String(lesson.preview_image_url || lesson.preview_image_ || "").trim();
+    if (!raw) return "";
+    return normalizeMediaUrl(raw, "file");
+  }
+
   function renderDebugPanel(config, lessons, completed, model) {
     if (!isDebugMode()) return;
+
+    DEBUG_LAST_CONTEXT = {
+      config: config,
+      lessons: lessons,
+      completed: completed,
+      model: model
+    };
 
     var existing = document.getElementById("debugPanel");
     if (existing) existing.remove();
@@ -173,6 +190,9 @@
     ];
 
     lessons.forEach(function (lesson) {
+      var normalizedPreview = getPreviewSrc(lesson);
+      var imgStatus = DEBUG_IMG_STATUS[lesson.lesson_id] || "PENDING";
+
       lines.push(
         [
           "lesson_id=" + lesson.lesson_id,
@@ -180,10 +200,27 @@
           "accessible=" + Boolean(model.map[lesson.lesson_id])
         ].join(" | ")
       );
+      lines.push("preview_image_url(raw): " + String(lesson.preview_image_url || ""));
+      lines.push("preview_image_(raw): " + String(lesson.preview_image_ || ""));
+      lines.push("preview_image(normalized): " + String(normalizedPreview));
+      lines.push("video_url(raw): " + String(lesson.video_url || ""));
+      lines.push("img: " + imgStatus);
+      lines.push("");
     });
 
     panel.textContent = lines.join("\n");
     document.body.appendChild(panel);
+  }
+
+
+  function refreshDebugPanel() {
+    if (!DEBUG_LAST_CONTEXT || !isDebugMode()) return;
+    renderDebugPanel(
+      DEBUG_LAST_CONTEXT.config,
+      DEBUG_LAST_CONTEXT.lessons,
+      DEBUG_LAST_CONTEXT.completed,
+      DEBUG_LAST_CONTEXT.model
+    );
   }
 
   function renderDashboard(lessons, config) {
@@ -220,7 +257,7 @@
       return [
         '<article class="lesson-card' + (locked ? ' locked' : '') + '">',
         '<div class="lesson-preview">',
-        (lesson.preview_image_url ? '<img src="' + escapeAttr(lesson.preview_image_url) + '" alt="Превью урока" loading="lazy" onerror="this.style.display=\'none\'">' : ''),
+        (getPreviewSrc(lesson) ? '<img src="' + escapeAttr(getPreviewSrc(lesson)) + '" alt="Превью урока" loading="lazy" data-lesson-id="' + escapeAttr(lesson.lesson_id) + '">' : ''),
         '</div>',
         '<div class="lesson-card-body">',
         '<div class="lesson-meta">',
@@ -241,6 +278,31 @@
         '</article>'
       ].join("");
     }).join("");
+
+    if (isDebugMode()) {
+      var previewImages = list.querySelectorAll(".lesson-preview img[data-lesson-id]");
+      previewImages.forEach(function (img) {
+        var lessonId = img.getAttribute("data-lesson-id") || "";
+
+        img.addEventListener("load", function () {
+          DEBUG_IMG_STATUS[lessonId] = "OK";
+          console.log("[IMG OK] lesson_id=" + lessonId + " src=" + img.currentSrc);
+          refreshDebugPanel();
+        });
+
+        img.addEventListener("error", function () {
+          DEBUG_IMG_STATUS[lessonId] = "FAIL";
+          console.log("[IMG FAIL] lesson_id=" + lessonId + " src=" + img.currentSrc);
+          img.style.display = "none";
+          refreshDebugPanel();
+        });
+
+        if (img.complete && img.naturalWidth > 0) {
+          DEBUG_IMG_STATUS[lessonId] = "OK";
+        }
+      });
+      refreshDebugPanel();
+    }
 
     renderProgress(lessons);
   }
