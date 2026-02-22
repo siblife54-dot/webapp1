@@ -3,7 +3,7 @@ window.APP_CONFIG = {
   useSampleData: false,
 
   // Брендинг
-  brandName: "Expert Cabinet",
+  brandName: "MindCore project",
   accentColor: "#8B5CF6",
   backgroundColor: "#0E1B2B",
   cardColor: "#12243a",
