@@ -150,7 +150,6 @@
     return params.get("debug") === "1";
   }
 
-
   function extractGoogleDriveFileId(url) {
     var value = String(url || "").trim();
     if (!value) return null;
@@ -244,7 +243,6 @@
     panel.textContent = lines.join("\n");
     document.body.appendChild(panel);
   }
-
 
   function refreshDebugPanel() {
     if (!DEBUG_LAST_CONTEXT || !isDebugMode()) return;
@@ -431,6 +429,69 @@
     return { mode: "none", url: "" };
   }
 
+  // ===== Attachments: parse + tags =====
+  function parseAttachments(raw) {
+    if (!raw) return [];
+
+    // Каждая строка = один материал
+    var lines = String(raw)
+      .split(/\r?\n|;/g) // перенос строки или ;
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+
+    var files = lines.map(function (line, idx) {
+      var name = "Материал " + (idx + 1);
+      var url = "";
+
+      if (line.indexOf("|") !== -1) {
+        var parts = line.split("|").map(function (x) { return x.trim(); });
+        var a = parts[0] || "";
+        var b = parts[1] || "";
+
+        var aIsUrl = /^https?:\/\//i.test(a);
+        var bIsUrl = /^https?:\/\//i.test(b);
+
+        // Поддержка: "URL | Название" и "Название | URL"
+        if (aIsUrl && !bIsUrl) { url = a; name = b || name; }
+        else if (bIsUrl && !aIsUrl) { url = b; name = a || name; }
+        else { name = a || name; url = b || ""; }
+      } else {
+        url = line;
+      }
+
+      url = normalizeMediaUrl(url, "file");
+
+      return { name: name, url: url };
+    });
+
+    // Убираем мусор: пустые или не ссылки
+    return files.filter(function (f) {
+      return /^https?:\/\//i.test(f.url);
+    });
+  }
+
+  function getFileExt(nameOrUrl) {
+    var v = String(nameOrUrl || "").trim().toLowerCase();
+    v = v.split("#")[0].split("?")[0];
+    var m = v.match(/\.([a-z0-9]{1,6})$/i);
+    return m ? m[1].toUpperCase() : "";
+  }
+
+  function getFileTag(file) {
+    var ext = getFileExt(file.name);
+    if (!ext) ext = getFileExt(file.url);
+
+    if (!ext) return "LINK";
+    if (ext === "PDF") return "PDF";
+    if (ext === "DOC" || ext === "DOCX") return "DOC";
+    if (ext === "XLS" || ext === "XLSX" || ext === "CSV") return "XLS";
+    if (ext === "PPT" || ext === "PPTX") return "PPT";
+    if (ext === "ZIP" || ext === "RAR" || ext === "7Z") return "ZIP";
+    if (ext === "JPG" || ext === "JPEG" || ext === "PNG" || ext === "WEBP") return "IMG";
+    return ext;
+  }
+  // ====================================
+
   function renderLesson(lessons) {
     var stateBox = document.getElementById("lessonState");
     var main = document.getElementById("lessonMain");
@@ -488,21 +549,29 @@
       videoLinkCard.hidden = false;
     }
 
+    // ===== Materials rendering (fixed) =====
     var attachmentsWrap = document.getElementById("attachmentsWrap");
     var attachmentsList = document.getElementById("attachmentsList");
-    var attachments = (lesson.attachments || "")
-      .split("|")
-      .map(function (x) { return x.trim(); })
-      .filter(Boolean);
+    var files = parseAttachments(lesson.attachments);
 
-    if (attachments.length) {
+    if (files.length) {
       attachmentsWrap.hidden = false;
-      attachmentsList.innerHTML = attachments.map(function (url, i) {
-        var normalizedFile = normalizeMediaUrl(url, "file");
-        var safe = /^https?:\/\//i.test(normalizedFile) ? normalizedFile : "#";
-        return '<li><a href="' + safe + '" target="_blank" rel="noopener noreferrer">Материал ' + (i + 1) + '</a></li>';
+      attachmentsList.innerHTML = files.map(function (f) {
+        var tag = getFileTag(f);
+        return (
+          '<li class="attach-item">' +
+            '<a class="attach-link" href="' + escapeAttr(f.url) + '" target="_blank" rel="noopener noreferrer">' +
+              '<span class="attach-name">' + escapeHtml(f.name) + '</span>' +
+              '<span class="file-tag">' + escapeHtml(tag) + '</span>' +
+            '</a>' +
+          '</li>'
+        );
       }).join("");
+    } else {
+      attachmentsWrap.hidden = true;
+      attachmentsList.innerHTML = "";
     }
+    // ======================================
 
     var completeBtn = document.getElementById("completeBtn");
     if (completed.includes(lesson.lesson_id)) {
