@@ -435,3 +435,28 @@ a { color: inherit; }
   border-top: 1px solid rgba(255, 255, 255, 0.10);
   margin: 14px 0;
 }
+/* Accent inner blocks inside lesson */
+
+.lesson-note {
+  border-left: 4px solid var(--accent);
+  padding: 12px 14px;
+  margin: 14px 0;
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 12px;
+}
+
+.lesson-warning {
+  border-left: 4px solid #ff6f7d;
+  padding: 12px 14px;
+  margin: 14px 0;
+  background: rgba(255, 111, 125, 0.08);
+  border-radius: 12px;
+}
+
+.lesson-soft {
+  border-left: 4px solid rgba(255,255,255,0.2);
+  padding: 12px 14px;
+  margin: 14px 0;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+}
