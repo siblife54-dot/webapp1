@@ -460,3 +460,30 @@ a { color: inherit; }
   background: rgba(255,255,255,0.03);
   border-radius: 12px;
 }
+.attach-item { margin: 8px 0; }
+
+.attach-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.attach-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.04em;
+}
