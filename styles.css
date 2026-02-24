@@ -347,3 +347,91 @@ a { color: inherit; }
   z-index: 9999;
   backdrop-filter: blur(6px);
 }
+/* =========================
+   Lesson content blocks (cards inside lesson)
+   Add to the END of styles.css
+   ========================= */
+
+.lesson-content {
+  line-height: 1.65;
+}
+
+.lesson-content h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.lesson-content h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  line-height: 1.35;
+  color: #dbe7ff;
+}
+
+.lesson-content p {
+  margin: 0 0 12px 0;
+  color: var(--text);
+}
+
+.lesson-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Card-block inside lesson */
+.lesson-block {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 0 0 16px 0;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.lesson-block:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-block img {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+/* Lists inside lesson */
+.lesson-content ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.lesson-content li {
+  margin: 0 0 12px 0;
+}
+
+.lesson-content li:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-content ul ul {
+  margin-top: 8px;
+  padding-left: 18px;
+}
+
+/* Links inside lesson */
+.lesson-content a {
+  color: color-mix(in srgb, var(--accent) 85%, white);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lesson-content a:hover {
+  opacity: 0.9;
+}
+
+/* Divider */
+.lesson-content hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  margin: 14px 0;
+}
