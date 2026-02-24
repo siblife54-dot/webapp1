@@ -487,3 +487,89 @@ a { color: inherit; }
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.04em;
 }
+/* ===== Materials: force-style (Telegram WebApp) ===== */
+.lesson-attachments #attachmentsList{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.lesson-attachments #attachmentsList li{
+  margin: 0;
+  padding: 0;
+}
+
+.lesson-attachments #attachmentsList a.attach-link{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 12px;
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.lesson-attachments #attachmentsList a.attach-link:active{
+  transform: scale(0.99);
+}
+
+@media (hover:hover){
+  .lesson-attachments #attachmentsList a.attach-link:hover{
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.12);
+  }
+}
+
+.lesson-attachments #attachmentsList .attach-name{
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson-attachments #attachmentsList .attach-name::before{
+  content: "📎";
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  flex: 0 0 auto;
+
+  font-size: 14px;
+}
+
+.lesson-attachments #attachmentsList .file-tag{
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.10);
+  color: rgba(255,255,255,0.92);
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
