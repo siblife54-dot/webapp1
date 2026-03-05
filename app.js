@@ -541,9 +541,22 @@
     var videoLinkCard = document.getElementById("videoLinkCard");
     var videoLinkButton = document.getElementById("videoLinkButton");
 
-    if (videoModel.mode === "embed") {
-      frame.src = videoModel.url;
-      videoWrap.hidden = false;
+   if (videoModel.mode === "embed") {
+  // Разрешения для fullscreen / PiP (особенно важно для iOS WebView)
+  frame.setAttribute("allow", "autoplay; encrypted-media; fullscreen; picture-in-picture");
+  frame.setAttribute("allowfullscreen", "true");
+  frame.setAttribute("playsinline", "true");
+
+  frame.src = videoModel.url;
+  videoWrap.hidden = false;
+
+  // Дублируем ссылку “Открыть” как запасной вариант (полезно для iOS/Drive)
+  videoLinkButton.href = videoModel.url;
+  videoLinkCard.hidden = false;
+} else if (videoModel.mode === "link") {
+  videoLinkButton.href = videoModel.url;
+  videoLinkCard.hidden = false;
+}
     } else if (videoModel.mode === "link") {
       videoLinkButton.href = videoModel.url;
       videoLinkCard.hidden = false;
