@@ -541,7 +541,7 @@
     var videoLinkCard = document.getElementById("videoLinkCard");
     var videoLinkButton = document.getElementById("videoLinkButton");
 
-   if (videoModel.mode === "embed") {
+  if (videoModel.mode === "embed") {
   // Разрешения для fullscreen / PiP (особенно важно для iOS WebView)
   frame.setAttribute("allow", "autoplay; encrypted-media; fullscreen; picture-in-picture");
   frame.setAttribute("allowfullscreen", "true");
@@ -556,11 +556,12 @@
 } else if (videoModel.mode === "link") {
   videoLinkButton.href = videoModel.url;
   videoLinkCard.hidden = false;
+} else {
+  // Ничего не показываем
+  videoWrap.hidden = true;
+  videoLinkCard.hidden = true;
+  frame.removeAttribute("src");
 }
-    } else if (videoModel.mode === "link") {
-      videoLinkButton.href = videoModel.url;
-      videoLinkCard.hidden = false;
-    }
 
     // ===== Materials rendering (fixed) =====
     var attachmentsWrap = document.getElementById("attachmentsWrap");
