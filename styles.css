@@ -573,3 +573,26 @@ a { color: inherit; }
   text-transform: uppercase;
   flex: 0 0 auto;
 }
+.lesson-media {
+  width: 100%;
+  margin: 14px 0 18px;
+}
+
+.lesson-media__frame {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: #000;
+}
+
+.lesson-media__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
