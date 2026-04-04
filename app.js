@@ -355,16 +355,17 @@
     host.innerHTML = [
       '<section class="card nutrition-card">',
       '<h3>Твой план питания</h3>',
+      '<p class="nutrition-card__subtitle">Стартовый ориентир под твою цель</p>',
       (hasPlan
-        ? '<p><strong>' + plan.calories + ' ккал/день</strong></p><p>Б ' + plan.protein + ' · Ж ' + plan.fats + ' · У ' + plan.carbs + '</p><p>Цель: ' + NUTRITION.formatGoal(plan.goal) + '</p>'
+        ? '<p class="nutrition-card__calories"><strong>' + plan.calories + '</strong> <span>ккал/день</span></p><p class="nutrition-card__macros">Б ' + plan.protein + ' · Ж ' + plan.fats + ' · У ' + plan.carbs + '</p><p class="nutrition-card__goal">Цель: ' + NUTRITION.formatGoal(plan.goal) + '</p>'
         : '<p>Рассчитай свою норму калорий и БЖУ, чтобы пройти курс с понятной отправной точкой.</p>'),
-      '<button type="button" class="btn btn-primary" id="nutritionOpenBtn">' + (hasPlan ? 'Пересчитать' : 'Рассчитать КБЖУ') + '</button>',
+      '<button type="button" class="btn btn-primary nutrition-card__action" id="nutritionOpenBtn">' + (hasPlan ? 'Пересчитать' : 'Рассчитать КБЖУ') + '</button>',
       '</section>'
     ].join('');
 
     var profileHint = document.getElementById("profileNutritionHint");
     if (profileHint) {
-      profileHint.textContent = hasPlan ? ('КБЖУ: ' + plan.calories + ' ккал') : '';
+      profileHint.textContent = hasPlan ? ('План: ' + plan.calories + ' ккал') : '';
     }
 
     var openBtn = document.getElementById("nutritionOpenBtn");
