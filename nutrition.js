@@ -110,6 +110,7 @@
     }
 
     var modalRoot = null;
+    var closeTransitionCleanup = null;
 
     function getModal() {
       if (!modalRoot) {
@@ -283,6 +284,10 @@
 
     function open(initialData) {
       var root = getModal();
+      if (typeof closeTransitionCleanup === "function") {
+        closeTransitionCleanup();
+        closeTransitionCleanup = null;
+      }
       renderForm(initialData || {
         sex: "female",
         activity: "1.375",
@@ -290,13 +295,45 @@
       });
 
       root.hidden = false;
+      root.classList.remove("is-open");
+      requestAnimationFrame(function () {
+        root.classList.add("is-open");
+      });
       document.body.classList.add("modal-open");
     }
 
     function close() {
       var root = getModal();
-      root.hidden = true;
-      document.body.classList.remove("modal-open");
+      if (root.hidden) return;
+
+      var sheet = root.querySelector(".nutrition-modal__sheet");
+
+      function finishClose() {
+        if (typeof closeTransitionCleanup === "function") {
+          closeTransitionCleanup();
+          closeTransitionCleanup = null;
+        }
+        root.hidden = true;
+        document.body.classList.remove("modal-open");
+      }
+
+      if (!sheet) {
+        finishClose();
+        return;
+      }
+
+      root.classList.remove("is-open");
+
+      var onTransitionEnd = function (event) {
+        if (event.target !== sheet || event.propertyName !== "transform") return;
+        finishClose();
+      };
+
+      closeTransitionCleanup = function () {
+        sheet.removeEventListener("transitionend", onTransitionEnd);
+      };
+
+      sheet.addEventListener("transitionend", onTransitionEnd);
     }
 
     document.addEventListener("click", function (event) {
