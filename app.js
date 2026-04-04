@@ -5,6 +5,14 @@
   var LEGACY_STORAGE_KEY = "completedLessons";
   var DEBUG_IMG_STATUS = {};
   var DEBUG_LAST_CONTEXT = null;
+  var APP_STORAGE = null;
+  var APP_PROFILE = null;
+  var STORAGE_DEBUG = {
+    telegramDetected: false,
+    cloudAvailable: false,
+    activeStorage: "local",
+    migratedLocalToCloud: false
+  };
 
   function getConfig() {
     return window.APP_CONFIG || {};
@@ -20,11 +28,6 @@
     if (brand) brand.textContent = config.brandName || "Кабинет курса";
   }
 
-  function getTelegramUser() {
-    var user = globalThis.Telegram?.WebApp?.initDataUnsafe?.user;
-    return user || null;
-  }
-
   function initTelegramViewport() {
     var tg = globalThis.Telegram && globalThis.Telegram.WebApp;
     if (!tg) return;
@@ -33,10 +36,9 @@
     if (typeof tg.expand === "function") tg.expand();
   }
 
-  function getUserName(user) {
-    if (!user) return "Студент";
-    var full = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
-    return full || user.username || "Студент";
+  function getUserName(profile) {
+    if (!profile) return "Студент";
+    return profile.fullName || profile.firstName || profile.username || "Студент";
   }
 
   function getInitials(name) {
@@ -57,27 +59,85 @@
     }
   }
 
-  function loadCompleted() {
-    var rawPrimary = localStorage.getItem(STORAGE_KEY);
+  async function loadCompleted() {
+    var rawPrimary = await APP_STORAGE.getItem(STORAGE_KEY);
     var primary = parseCompletedRaw(rawPrimary);
     if (primary.length) return primary;
 
-    var rawLegacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    var rawLegacy = await APP_STORAGE.getItem(LEGACY_STORAGE_KEY);
     return parseCompletedRaw(rawLegacy);
   }
 
-  function saveCompleted(ids) {
+  async function saveCompleted(ids) {
     var clean = Array.from(new Set(ids));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
-    localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(clean));
+    var serialized = JSON.stringify(clean);
+    await APP_STORAGE.setItem(STORAGE_KEY, serialized);
+    await APP_STORAGE.setItem(LEGACY_STORAGE_KEY, serialized);
   }
 
-  function markCompleted(id) {
-    var completed = loadCompleted();
+  async function markCompleted(id) {
+    var completed = await loadCompleted();
     if (!completed.includes(id)) {
       completed.push(id);
-      saveCompleted(completed);
+      await saveCompleted(completed);
     }
+  }
+
+  async function initStorage() {
+    var platform = globalThis.CourseAppPlatform || {};
+    var detectTelegramWebApp = platform.detectTelegramWebApp || function () { return false; };
+    var getAppStorage = platform.getAppStorage;
+
+    STORAGE_DEBUG.telegramDetected = Boolean(detectTelegramWebApp());
+    STORAGE_DEBUG.cloudAvailable = Boolean(globalThis.Telegram && globalThis.Telegram.WebApp && globalThis.Telegram.WebApp.CloudStorage);
+
+    if (typeof getAppStorage !== "function") {
+      APP_STORAGE = {
+        type: "local",
+        cloudFailed: false,
+        getItem: function (key) { return Promise.resolve(localStorage.getItem(key)); },
+        setItem: function (key, value) { localStorage.setItem(key, value); return Promise.resolve(); },
+        removeItem: function (key) { localStorage.removeItem(key); return Promise.resolve(); }
+      };
+      STORAGE_DEBUG.activeStorage = "local";
+      return;
+    }
+
+    APP_STORAGE = await getAppStorage({ storageKey: STORAGE_KEY });
+    STORAGE_DEBUG.activeStorage = APP_STORAGE.type || "local";
+
+    if (STORAGE_DEBUG.activeStorage === "cloud") {
+      var cloudRaw = await APP_STORAGE.getItem(STORAGE_KEY);
+      var legacyRaw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (!cloudRaw && legacyRaw) {
+        await APP_STORAGE.setItem(STORAGE_KEY, legacyRaw);
+        await APP_STORAGE.setItem(LEGACY_STORAGE_KEY, legacyRaw);
+        STORAGE_DEBUG.migratedLocalToCloud = true;
+      }
+    }
+
+    STORAGE_DEBUG.activeStorage = APP_STORAGE.type || STORAGE_DEBUG.activeStorage;
+  }
+
+  function getProfile() {
+    var platform = globalThis.CourseAppPlatform || {};
+    if (typeof platform.getTelegramUserProfile === "function") {
+      var profile = platform.getTelegramUserProfile();
+      if (profile && (profile.fullName || profile.firstName || profile.username)) {
+        return profile;
+      }
+    }
+
+    return {
+      id: null,
+      firstName: "Студент",
+      lastName: "",
+      fullName: "Студент",
+      username: "",
+      avatarUrl: "",
+      hasAvatar: false,
+      isTelegram: false
+    };
   }
 
   function normalizeLesson(raw) {
@@ -189,7 +249,7 @@
     return normalizePreviewImageUrl(raw);
   }
 
-  function renderDebugPanel(config, lessons, completed, model) {
+  async function renderDebugPanel(config, lessons, completed, model) {
     if (!isDebugMode()) return;
 
     DEBUG_LAST_CONTEXT = {
@@ -206,18 +266,27 @@
     panel.id = "debugPanel";
     panel.className = "debug-panel";
 
-    var rawStorage = localStorage.getItem(STORAGE_KEY);
-    var rawLegacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    var rawStorage = await APP_STORAGE.getItem(STORAGE_KEY);
+    var rawLegacy = await APP_STORAGE.getItem(LEGACY_STORAGE_KEY);
 
     var lines = [
       "DEBUG MODE",
       "courseId: " + (config.courseId || "(пусто)"),
       "total lessons loaded: " + lessons.length,
-      "localStorage." + STORAGE_KEY + ": " + String(rawStorage),
-      "localStorage.completedLessons raw value: " + String(rawLegacy),
+      "storage." + STORAGE_KEY + ": " + String(rawStorage),
+      "storage." + LEGACY_STORAGE_KEY + " raw value: " + String(rawLegacy),
       "parsed completedLessons array: " + JSON.stringify(completed),
       "maxCompletedDayNumber: " + model.maxCompletedDayNumber,
       "unlockThreshold: " + model.threshold,
+      "Telegram WebApp detected: " + (STORAGE_DEBUG.telegramDetected ? "yes" : "no"),
+      "CloudStorage available: " + (STORAGE_DEBUG.cloudAvailable ? "yes" : "no"),
+      "Active storage: " + STORAGE_DEBUG.activeStorage,
+      "Telegram user id: " + String(APP_PROFILE && APP_PROFILE.id),
+      "first_name: " + String(APP_PROFILE && APP_PROFILE.firstName),
+      "last_name: " + String(APP_PROFILE && APP_PROFILE.lastName),
+      "username: " + String(APP_PROFILE && APP_PROFILE.username),
+      "avatar available: " + ((APP_PROFILE && APP_PROFILE.hasAvatar) ? "yes" : "no"),
+      "migrated local -> cloud: " + (STORAGE_DEBUG.migratedLocalToCloud ? "yes" : "no"),
       ""
     ];
 
@@ -244,9 +313,9 @@
     document.body.appendChild(panel);
   }
 
-  function refreshDebugPanel() {
+  async function refreshDebugPanel() {
     if (!DEBUG_LAST_CONTEXT || !isDebugMode()) return;
-    renderDebugPanel(
+    await renderDebugPanel(
       DEBUG_LAST_CONTEXT.config,
       DEBUG_LAST_CONTEXT.lessons,
       DEBUG_LAST_CONTEXT.completed,
@@ -254,9 +323,8 @@
     );
   }
 
-  function renderDashboard(lessons, config) {
-    var user = getTelegramUser();
-    var name = getUserName(user);
+  async function renderDashboard(lessons, config) {
+    var name = getUserName(APP_PROFILE);
     var avatar = document.getElementById("avatar");
     var studentName = document.getElementById("studentName");
     var list = document.getElementById("lessonsContainer");
@@ -264,17 +332,24 @@
 
     studentName.textContent = name;
     avatar.textContent = getInitials(name);
+    avatar.style.backgroundImage = "";
+    if (APP_PROFILE && APP_PROFILE.avatarUrl) {
+      avatar.textContent = "";
+      avatar.style.backgroundImage = "url(\"" + escapeAttr(APP_PROFILE.avatarUrl) + "\")";
+      avatar.style.backgroundSize = "cover";
+      avatar.style.backgroundPosition = "center";
+    }
 
-    var completed = loadCompleted();
+    var completed = await loadCompleted();
     var accessModel = getAccessibilityModel(lessons, completed);
 
-    renderDebugPanel(config, lessons, completed, accessModel);
+    await renderDebugPanel(config, lessons, completed, accessModel);
 
     if (!lessons.length) {
       list.innerHTML = "";
       stateBox.hidden = false;
       stateBox.textContent = "Нет доступных уроков";
-      renderProgress(lessons);
+      await renderProgress(lessons);
       return;
     }
 
@@ -318,28 +393,28 @@
         img.addEventListener("load", function () {
           DEBUG_IMG_STATUS[lessonId] = "OK";
           console.log("[IMG OK] lesson_id=" + lessonId + " src=" + img.currentSrc);
-          refreshDebugPanel();
+          void refreshDebugPanel();
         });
 
         img.addEventListener("error", function () {
           DEBUG_IMG_STATUS[lessonId] = "FAIL";
           console.log("[IMG FAIL] lesson_id=" + lessonId + " src=" + img.currentSrc);
           img.style.display = "none";
-          refreshDebugPanel();
+          void refreshDebugPanel();
         });
 
         if (img.complete && img.naturalWidth > 0) {
           DEBUG_IMG_STATUS[lessonId] = "OK";
         }
       });
-      refreshDebugPanel();
+      void refreshDebugPanel();
     }
 
-    renderProgress(lessons);
+    await renderProgress(lessons);
   }
 
-  function renderProgress(lessons) {
-    var completed = loadCompleted();
+  async function renderProgress(lessons) {
+    var completed = await loadCompleted();
     var total = lessons.length;
     var completedCount = lessons.filter(function (l) {
       return completed.includes(l.lesson_id);
@@ -492,7 +567,7 @@
   }
   // ====================================
 
-  function renderLesson(lessons) {
+  async function renderLesson(lessons) {
     var stateBox = document.getElementById("lessonState");
     var main = document.getElementById("lessonMain");
     var id = new URLSearchParams(window.location.search).get("id");
@@ -513,7 +588,7 @@
       return;
     }
 
-    var completed = loadCompleted();
+    var completed = await loadCompleted();
     var accessModel = getAccessibilityModel(lessons, completed);
     if (!accessModel.map[lesson.lesson_id]) {
       stateBox.classList.remove("skeleton");
@@ -593,8 +668,8 @@
       completeBtn.disabled = true;
     }
 
-    completeBtn.addEventListener("click", function () {
-      markCompleted(lesson.lesson_id);
+    completeBtn.addEventListener("click", async function () {
+      await markCompleted(lesson.lesson_id);
       completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
       setTimeout(function () {
@@ -638,6 +713,8 @@
     var config = getConfig();
     applyTheme(config);
     initTelegramViewport();
+    await initStorage();
+    APP_PROFILE = getProfile();
 
     var page = document.body.getAttribute("data-page");
     if (page === "dashboard") {
@@ -646,8 +723,8 @@
 
     try {
       var lessons = await fetchLessons(config);
-      if (page === "dashboard") renderDashboard(lessons, config);
-      if (page === "lesson") renderLesson(lessons);
+      if (page === "dashboard") await renderDashboard(lessons, config);
+      if (page === "lesson") await renderLesson(lessons);
     } catch (error) {
       if (page === "dashboard") {
         showDashboardError(error.message || "Ошибка загрузки данных");
