@@ -48,6 +48,14 @@
   background: linear-gradient(180deg, var(--card), var(--card-2));
   box-shadow: var(--shadow);
   padding: 18px 14px 16px;
+  transform: translateY(16px);
+  opacity: 0;
+  transition: transform 200ms ease-out, opacity 200ms ease-out;
+}
+
+.nutrition-modal.is-open .nutrition-modal__sheet {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .nutrition-modal__close {
