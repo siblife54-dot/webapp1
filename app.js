@@ -354,7 +354,7 @@
 
     host.innerHTML = [
       '<section class="card nutrition-card">',
-      '<h3>Твой план питания</h3>',
+      '<h3>Ваш план питания</h3>',
       (hasPlan
         ? '<p><strong>' + plan.calories + ' ккал/день</strong></p><p>Б ' + plan.protein + ' · Ж ' + plan.fats + ' · У ' + plan.carbs + '</p><p>Цель: ' + NUTRITION.formatGoal(plan.goal) + '</p>'
         : '<p>Рассчитай свою норму калорий и БЖУ, чтобы пройти курс с понятной отправной точкой.</p>'),
