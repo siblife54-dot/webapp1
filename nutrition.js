@@ -111,6 +111,7 @@
 
     var modalRoot = null;
     var closeTransitionCleanup = null;
+    var resultRevealTimeout = null;
 
     function getModal() {
       if (!modalRoot) {
@@ -259,7 +260,41 @@
       };
 
       await savePlan(plan);
-      renderResult(plan);
+      renderSuccessThenResult(plan);
+    }
+
+    function clearResultRevealTimeout() {
+      if (resultRevealTimeout) {
+        clearTimeout(resultRevealTimeout);
+        resultRevealTimeout = null;
+      }
+    }
+
+    function renderSuccessThenResult(plan) {
+      clearResultRevealTimeout();
+      var content = getModal().querySelector(".nutrition-modal__content");
+
+      content.innerHTML = [
+        '<div class="nutrition-success" aria-live="polite">',
+        '<strong class="nutrition-success__title">✓ План питания рассчитан</strong>',
+        '<p class="nutrition-success__text">Результат сохранён в профиль</p>',
+        '</div>'
+      ].join("");
+
+      requestAnimationFrame(function () {
+        var block = content.querySelector(".nutrition-success");
+        if (block) block.classList.add("is-visible");
+      });
+
+      resultRevealTimeout = setTimeout(function () {
+        var block = content.querySelector(".nutrition-success");
+        if (block) block.classList.add("is-hidden");
+
+        resultRevealTimeout = setTimeout(function () {
+          renderResult(plan);
+          resultRevealTimeout = null;
+        }, 200);
+      }, 900);
     }
 
     function renderResult(plan) {
@@ -284,6 +319,7 @@
 
     function open(initialData) {
       var root = getModal();
+      clearResultRevealTimeout();
       if (typeof closeTransitionCleanup === "function") {
         closeTransitionCleanup();
         closeTransitionCleanup = null;
@@ -305,6 +341,7 @@
     function close() {
       var root = getModal();
       if (root.hidden) return;
+      clearResultRevealTimeout();
 
       var sheet = root.querySelector(".nutrition-modal__sheet");
 
