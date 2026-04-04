@@ -312,7 +312,7 @@
         '<p class="nutrition-text nutrition-text--success">Результат сохранён в профиль.</p>',
         '<div class="nutrition-actions">',
         '<button class="btn btn-primary" type="button" data-close="1">Понятно</button>',
-        (lessonLink ? '<a class="btn" href="' + lessonLink + '">Перейти к уроку по питанию</a>' : ""),
+        (lessonLink ? '<a class="btn" href="' + lessonLink + '">Перейти к урокам</a>' : ""),
         '</div>'
       ].join("");
     }
