@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Урок</title>
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./nutrition.css" />
 </head>
 <body class="lesson-page" data-page="lesson">
   <a href="./index.html" class="top-back">← Назад в кабинет</a>
@@ -16,6 +17,7 @@
     <p id="lessonDay" class="badge">День</p>
     <h1 id="lessonTitle">Название урока</h1>
     <p id="lessonSubtitle" class="lesson-subtitle"></p>
+    <div id="lessonNutritionHost"></div>
 
     <div class="video-wrap" id="videoWrap" hidden>
       <iframe id="videoFrame" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>
@@ -44,6 +46,7 @@
   <script src="./csv.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="./tg.js"></script>
+  <script src="./nutrition.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
