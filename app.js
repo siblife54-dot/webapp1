@@ -7,6 +7,8 @@
   var DEBUG_LAST_CONTEXT = null;
   var APP_STORAGE = null;
   var APP_PROFILE = null;
+  var NUTRITION = null;
+  var LAST_LESSONS = [];
   var STORAGE_DEBUG = {
     telegramDetected: false,
     cloudAvailable: false,
@@ -290,6 +292,15 @@
       ""
     ];
 
+    if (NUTRITION) {
+      var nutritionDebug = NUTRITION.getDebugInfo();
+      lines.push("calculator data exists: " + (nutritionDebug.exists ? "yes" : "no"));
+      lines.push("calculator storage used: " + (nutritionDebug.storageUsed || "unknown"));
+      lines.push("calculator updatedAt: " + (nutritionDebug.updatedAt || "-"));
+      lines.push("calculator values loaded successfully: " + (nutritionDebug.loadedSuccessfully ? "yes" : "no"));
+      lines.push("");
+    }
+
     lessons.forEach(function (lesson) {
       var normalizedPreview = getPreviewSrc(lesson);
       var imgStatus = DEBUG_IMG_STATUS[lesson.lesson_id] || "PENDING";
@@ -323,6 +334,47 @@
     );
   }
 
+
+
+  function getNutritionLessonLink() {
+    if (!LAST_LESSONS || !LAST_LESSONS.length) return null;
+    var nutritionLesson = LAST_LESSONS.find(function (lesson) {
+      return /питан/i.test(lesson.title || "");
+    });
+    if (!nutritionLesson) return null;
+    return "./lesson.html?id=" + encodeURIComponent(nutritionLesson.lesson_id);
+  }
+
+  async function renderNutritionCard() {
+    var host = document.getElementById("nutritionCardHost");
+    if (!host || !NUTRITION) return;
+
+    var plan = await NUTRITION.loadPlan();
+    var hasPlan = Boolean(plan && plan.calories);
+
+    host.innerHTML = [
+      '<section class="card nutrition-card">',
+      '<h3>Твой план питания</h3>',
+      (hasPlan
+        ? '<p><strong>' + plan.calories + ' ккал/день</strong></p><p>Б ' + plan.protein + ' · Ж ' + plan.fats + ' · У ' + plan.carbs + '</p><p>Цель: ' + NUTRITION.formatGoal(plan.goal) + '</p>'
+        : '<p>Рассчитай свою норму калорий и БЖУ, чтобы пройти курс с понятной отправной точкой.</p>'),
+      '<button type="button" class="btn btn-primary" id="nutritionOpenBtn">' + (hasPlan ? 'Пересчитать' : 'Рассчитать КБЖУ') + '</button>',
+      '</section>'
+    ].join('');
+
+    var profileHint = document.getElementById("profileNutritionHint");
+    if (profileHint) {
+      profileHint.textContent = hasPlan ? ('КБЖУ: ' + plan.calories + ' ккал') : '';
+    }
+
+    var openBtn = document.getElementById("nutritionOpenBtn");
+    if (openBtn) {
+      openBtn.addEventListener("click", function () {
+        NUTRITION.open(plan || null);
+      });
+    }
+  }
+
   async function renderDashboard(lessons, config) {
     var name = getUserName(APP_PROFILE);
     var avatar = document.getElementById("avatar");
@@ -343,6 +395,7 @@
     var completed = await loadCompleted();
     var accessModel = getAccessibilityModel(lessons, completed);
 
+    await renderNutritionCard();
     await renderDebugPanel(config, lessons, completed, accessModel);
 
     if (!lessons.length) {
@@ -603,6 +656,20 @@
     document.getElementById("lessonTitle").textContent = lesson.title;
     document.getElementById("lessonSubtitle").textContent = lesson.subtitle || "";
 
+    var lessonNutritionHost = document.getElementById("lessonNutritionHost");
+    if (lessonNutritionHost && NUTRITION && Number(lesson.day_number) === 0) {
+      var existingPlan = await NUTRITION.loadPlan();
+      lessonNutritionHost.innerHTML = '<button class="btn btn-primary" type="button" id="lessonNutritionBtn">Рассчитать свои КБЖУ</button>';
+      var lessonNutritionBtn = document.getElementById("lessonNutritionBtn");
+      if (lessonNutritionBtn) {
+        lessonNutritionBtn.addEventListener("click", function () {
+          NUTRITION.open(existingPlan || null);
+        });
+      }
+    } else if (lessonNutritionHost) {
+      lessonNutritionHost.innerHTML = "";
+    }
+
     var content = document.getElementById("lessonContent");
     if (lesson.content_html) {
       content.innerHTML = lesson.content_html;
@@ -715,6 +782,17 @@
     initTelegramViewport();
     await initStorage();
     APP_PROFILE = getProfile();
+    if (globalThis.NutritionCalculator && typeof globalThis.NutritionCalculator.create === "function") {
+      NUTRITION = globalThis.NutritionCalculator.create({
+        storage: APP_STORAGE,
+        onPlanSaved: function () {
+          if (document.body.getAttribute("data-page") === "dashboard") {
+            void renderNutritionCard();
+          }
+        },
+        getLessonLink: getNutritionLessonLink
+      });
+    }
 
     var page = document.body.getAttribute("data-page");
     if (page === "dashboard") {
@@ -723,6 +801,7 @@
 
     try {
       var lessons = await fetchLessons(config);
+      LAST_LESSONS = lessons.slice();
       if (page === "dashboard") await renderDashboard(lessons, config);
       if (page === "lesson") await renderLesson(lessons);
     } catch (error) {
