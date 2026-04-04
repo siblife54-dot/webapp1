@@ -107,4 +107,35 @@
 
 .nutrition-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+.nutrition-success {
+  min-height: 200px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.nutrition-success.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nutrition-success.is-hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.nutrition-success__title {
+  font-size: 20px;
+}
+
+.nutrition-success__text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 body.modal-open { overflow: hidden; }
