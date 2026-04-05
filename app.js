@@ -657,16 +657,7 @@
     document.getElementById("lessonSubtitle").textContent = lesson.subtitle || "";
 
     var lessonNutritionHost = document.getElementById("lessonNutritionHost");
-    if (lessonNutritionHost && NUTRITION && Number(lesson.day_number) === 0) {
-      var existingPlan = await NUTRITION.loadPlan();
-      lessonNutritionHost.innerHTML = '<button class="btn btn-primary" type="button" id="lessonNutritionBtn">Рассчитать свои КБЖУ</button>';
-      var lessonNutritionBtn = document.getElementById("lessonNutritionBtn");
-      if (lessonNutritionBtn) {
-        lessonNutritionBtn.addEventListener("click", function () {
-          NUTRITION.open(existingPlan || null);
-        });
-      }
-    } else if (lessonNutritionHost) {
+    if (lessonNutritionHost) {
       lessonNutritionHost.innerHTML = "";
     }
 
